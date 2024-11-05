@@ -24,5 +24,5 @@ export const userSignUp = async (data) => {
   
   const user = await getUser(joinUserId); //새로 추가된 사용자의 ID(joinUserId)를 사용해 해당 사용자 정보를 조회
   
-  return responseFromUser({ user: user[0] }); //user 객체를 responseFromUser 함수에 전달하여, 클라이언트에 보낼 응답 형식으로 가공
+  return responseFromUser({ user}); //user 객체를 responseFromUser 함수에 전달하여, 클라이언트에 보낼 응답 형식으로 가공
 };

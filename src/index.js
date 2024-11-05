@@ -2,10 +2,11 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from 'cors';
 import { handleUserSignUp } from "./controllers/user.controller.js";
-import { handleStoreAdd } from "./controllers/store.controller.js";
+import { handleStoreAdd, handleListStoreReviews } from "./controllers/store.controller.js";
 import { handleReviewAdd } from "./controllers/review.controller.js";
-import { handleMissionAdd } from "./controllers/mission.controller.js";
+import { handleMissionAdd, handleListStoreMissions, handleListUserOngoingMissions, handleCompleteUserMission} from "./controllers/mission.controller.js";
 import { handleOngoing } from "./controllers/ongoing.controller.js";
+import { handleListUserReviews } from "./controllers/review.controller.js";
 
 dotenv.config();
 
@@ -31,6 +32,17 @@ app.post("/stores/:storeId/reviews", handleReviewAdd); //2. 가게에 리뷰 추
 app.post("/stores/:storeId/missions", handleMissionAdd); //3. 가게에 미션 추가하기 API
 
 app.post("/users/:usersId/missions/:missionId", handleOngoing); //4. 가게의 미션을 도전 중인 미션에 추가(미션 도전하기) API
+
+app.get("/api/v1/stores/:storeId/reviews", handleListStoreReviews); //목록 조회 API(가게 리뷰)
+
+app.get("/users/:loginId/reviews", handleListUserReviews);
+
+app.get("/stores/:storeId/missions", handleListStoreMissions );
+
+app.get("/users/:userId/ongoing-missions", handleListUserOngoingMissions );
+
+app.patch("/users/:userId/missions/:missionId/complete", handleCompleteUserMission);
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

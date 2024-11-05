@@ -8,7 +8,7 @@ export const bodyToReview = (body) => {
     };
   };
 
-export const responseFromReview = ({ review }) => {
+export const responseFromReview = (review) => {
 
     return {
         score: review.score,
@@ -16,3 +16,16 @@ export const responseFromReview = ({ review }) => {
     };
   };
   
+export const parseCursor = (cursor) => {
+  return cursor ? parseInt(cursor, 10) : null;
+};
+
+export const responseFromUserReviews  = (reviews) => ({
+  reviews: reviews.map((review) => ({
+    score: review.score,
+    content: review.content,
+  })),
+  pagination: {
+    cursor: reviews.length ? reviews[reviews.length - 1].id : null,
+  },
+});

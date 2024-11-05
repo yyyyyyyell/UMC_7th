@@ -13,5 +13,5 @@ export const Ongoing = async (data) => {
   
   const ongoing = await getOngoing(joinOngoingId);
   
-  return responseFromOngoing({ ongoing: ongoing[0] });
+  return responseFromOngoing(ongoing);
 };

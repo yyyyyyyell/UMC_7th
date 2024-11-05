@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 성별을 위한 enum 정의
+enum Gender {
+  MALE
+  FEMALE
+}
+
+// 로그인 상태를 위한 enum 정의
+enum LoginStatus {
+  active
+  inactive
+}
+
+// 미션 상태를 위한 enum 정의
+enum MissionStatus {
+  ongoing
+  completed
+  failed
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  account       String   @unique(map: "account") @db.VarChar(100)
+  password      String   @db.VarChar(100)
+  name          String   @db.VarChar(100)
+  gender        Gender
+  birth         DateTime @db.Date
+  foodId        Int?
+  addressId     Int?
+
+  food          Food?    @relation(fields: [foodId], references: [id])
+  address       Address? @relation(fields: [addressId], references: [id])
+  login         Login?   // 양방향 관계 설정 시 fields와 references를 제거
+
+  @@map("signup")
+}
+
+model Food {
+  id   Int    @id @default(autoincrement())
+  type String @db.VarChar(100)
+
+  users  User[]
+  stores Store[]
+  
+  @@map("food")
+}
+
+model Address {
+  id   Int    @id @default(autoincrement())
+  type String @db.VarChar(255)
+
+  users  User[]
+  stores Store[]
+  
+  @@map("address")
+}
+
+model Login {
+  signupId    Int        @id
+  phoneNumber String     @db.VarChar(20)
+  status      LoginStatus
+  sumPoint    Int        @default(0)
+  
+  user        User       @relation(fields: [signupId], references: [id])
+  reviews     Review[]
+  missions    LoginMissionStatus[]
+
+  @@map("login")
+}
+
+model Store {
+  id        Int    @id @default(autoincrement())
+  name      String @db.VarChar(100)
+  info      String? @db.Text
+  addressId Int?
+  foodId    Int?
+
+  address   Address? @relation(fields: [addressId], references: [id])
+  food      Food?    @relation(fields: [foodId], references: [id])
+  missions  Mission[]
+  reviews   Review[]
+
+  @@map("store")
+}
+
+model Mission {
+  id      Int    @id @default(autoincrement())
+  name    String @db.VarChar(100)
+  content String @db.Text
+  point   Int
+  code    String @db.VarChar(50)
+  storeId Int?
+
+  store   Store? @relation(fields: [storeId], references: [id])
+  status  LoginMissionStatus[]
+
+  @@map("mission")
+}
+
+model Review {
+  id       Int    @id @default(autoincrement())
+  score    Int    @db.Int
+  content  String @db.Text
+  loginId  Int
+  storeId  Int
+
+  login    Login @relation(fields: [loginId], references: [signupId])
+  store    Store @relation(fields: [storeId], references: [id])
+
+  @@map("review")
+}
+
+model LoginMissionStatus {
+  id        Int           @id @default(autoincrement())
+  loginId   Int
+  missionId Int
+  status    MissionStatus @default(ongoing)
+
+  login     Login   @relation(fields: [loginId], references: [signupId])
+  mission   Mission @relation(fields: [missionId], references: [id])
+
+  @@map("login_mission_status")
+  @@unique([loginId, missionId], map: "unique_user_mission")
+}

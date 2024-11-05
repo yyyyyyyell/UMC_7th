@@ -1,59 +1,51 @@
-import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
-// 같은 주소에 같은 가게가 있는지 확인
+// 같은 주소에 같은 가게가 있는지 확인 후 가게 추가
 export const addStore = async (data) => {
-  const conn = await pool.getConnection();
-
   try {
-    const [confirm] = await pool.query(
-    
-      `SELECT EXISTS(SELECT 1 FROM store WHERE name = ? AND address_id = ?) as isExistStore;`,
-      [data.name,data.address_id]
-    );
+    // 같은 주소와 이름을 가진 가게가 있는지 확인
+    const existingStore = await prisma.store.findFirst({
+      where: {
+        name: data.name,
+        addressId: data.address_id,
+      },
+    });
 
-    if (confirm[0].isExistStore) {
+    if (existingStore) {
       return null;
     }
-    
-    //가게 추가
-    const [result] = await pool.query( 
-      `INSERT INTO store (name, info, address_id) VALUES (?, ?, ?);`,
-      [
-        data.name,
-        data.info,
-        data.address_id
-      ]
-    );
 
-    return result.insertId; 
+    // 가게 추가
+    const newStore = await prisma.store.create({
+      data: {
+        name: data.name,
+        info: data.info,
+        addressId: data.address_id,
+      },
+    });
 
+    return newStore.id; // Prisma는 생성된 객체를 반환하므로, id 필드를 반환
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release();
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
 };
 
-export const getStore = async (insertId) => {
-  const conn = await pool.getConnection();
 
+export const getStore = async (storeId) => {
   try {
-    const [store] = await pool.query(`SELECT * FROM store WHERE id = ?;`, insertId);
+    // Prisma를 사용하여 ID로 매장 조회
+    const store = await prisma.store.findUnique({
+      where: {
+        id: storeId,
+      },
+    });
 
-    console.log(store);
-
-    if (store.length == 0) {
+    if (!store) {
       return null;
     }
 
     return store;
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release();
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
 };

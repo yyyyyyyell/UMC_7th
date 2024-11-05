@@ -1,57 +1,82 @@
-import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
 export const addMission = async (data) => {
-  const conn = await pool.getConnection(); 
   try {
-    const [confirm] = await pool.query(
-      `SELECT EXISTS(SELECT 1 FROM mission WHERE code = ?) as isExistMission;`,
-      data.code
-    );
+    // 중복된 코드가 있는지 확인
+    const existingMission = await prisma.mission.findUnique({
+      where: {
+        code: data.code,
+      },
+    });
 
-    if (confirm[0].isExistEmail) {
+    if (existingMission) {
       return null;
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO mission (name, content, point, code, store_id) VALUES (?, ?, ?, ?, ?);`,
-      [
-        data.name,
-        data.content,
-        data.point,
-        data.code,
-        data.store_id
-      ]
-    );
-    return result.insertId;
+    // 미션 추가
+    const newMission = await prisma.mission.create({
+      data: {
+        name: data.name,
+        content: data.content,
+        point: data.point,
+        code: data.code,
+        storeId: data.store_id,
+      },
+    });
 
+    return newMission.id; // Prisma는 생성된 객체를 반환하므로, id 필드 반환
   } catch (err) {
     throw new Error(
       `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
     );
-  } finally {
-    conn.release(); 
   }
 };
 
-
-export const getMission= async (insertId) => {
-  const conn = await pool.getConnection();
-
+export const getMission = async (missionId) => {
   try {
-    const [user] = await pool.query(`SELECT * FROM mission WHERE id = ?;`, insertId);
+    const mission = await prisma.mission.findUnique({
+      where: {
+        id: missionId,
+      },
+    });
 
-    console.log(user);
-
-    if (user.length == 0) {
+    if (!mission) {
       return null;
     }
 
-    return user;
+    return mission;
   } catch (err) {
     throw new Error(
       `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
     );
-  } finally {
-    conn.release();
   }
+};
+
+export const getStoreMissions = async (storeId, cursor) => {
+  return await prisma.mission.findMany({
+    where: { storeId },
+    orderBy: { id: "asc" },
+    take: 10,
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+  });
+};
+
+export const getUserOngoingMissions = async (userId, cursor) => {
+  return await prisma.loginMissionStatus.findMany({
+    where: { loginId: userId, status: "ongoing" },
+    orderBy: { id: "asc" },
+    take: 10,
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+  });
+};
+
+export const completeMission = async (userId, missionId) => {
+  await prisma.loginMissionStatus.updateMany({
+    where: {
+      loginId: userId,
+      missionId: missionId,
+      status: "ongoing"
+    },
+    data: { status: "completed" }
+  });
 };

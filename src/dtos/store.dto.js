@@ -7,11 +7,19 @@ export const bodyToStore = (body) => {
     };
   };
 
-export const responseFromStore = ({ store }) => {
+export const responseFromStore = (store) => {
 
     return {
         name: store.name,
-        info: store.info,
+        info: store.info
     };
   };
   
+  export const responseFromReviews = (reviews) => {
+    return {
+      data: reviews,
+      pagination: {
+        cursor: reviews.length ? reviews[reviews.length - 1].id : null,
+      },
+    };
+  };

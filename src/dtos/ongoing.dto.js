@@ -6,7 +6,7 @@ export const bodyToOngoing = (body) => {
     };
   };
 
-export const responseFromOngoing = ({ ongoing }) => {
+export const responseFromOngoing = (ongoing) => {
 
     return {
         mission_id: ongoing.mission_id,

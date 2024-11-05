@@ -9,7 +9,7 @@ export const bodyToMission = (body) => {
     };
   };
 
-export const responseFromMission = ({ mission }) => {
+export const responseFromMission = (mission) => {
 
     return {
         name: mission.name,
@@ -18,3 +18,20 @@ export const responseFromMission = ({ mission }) => {
         code: mission.code,
         }
   };
+
+  export const parseCursor = (cursor) => {
+    return cursor ? parseInt(cursor, 10) : null;
+  };
+  
+  export const responseFromMissions = (missions) => ({
+    missions: missions.map((mission) => ({
+      name: mission.name,
+      content: mission.content,
+      point: mission.point,
+      code: mission.code,
+    })),
+    pagination: {
+      cursor: missions.length ? missions[missions.length - 1].id : null,
+    },
+  });
+  

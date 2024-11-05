@@ -1,55 +1,49 @@
-import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
 export const addOngoing = async (data) => {
-  const conn = await pool.getConnection(); 
   try {
-    const [confirm] = await pool.query(
-      `SELECT EXISTS(SELECT 1 FROM login_mission_status  WHERE login_id = ? AND mission_id = ? AND status = 'ongoing') as isAlreadyOngoing;`,
-      [data.login_id, data.mission_id]
-    );
+    // 진행 중인 미션이 있는지 확인
+    const existingOngoing = await prisma.loginMissionStatus.findFirst({
+      where: {
+        loginId: data.login_id,
+        missionId: data.mission_id,
+        status: "ongoing",
+      },
+    });
 
-    if (confirm[0].isAlreadyOngoing) {
+    if (existingOngoing) {
       return null;
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO login_mission_status (login_id, mission_id) VALUES (?, ?);`,
-      [
-        data.login_id,
-        data.mission_id,
-        'ongoing'
-      ]
-    );
-    return result.insertId;
+    // 진행 중 상태 추가
+    const newOngoing = await prisma.loginMissionStatus.create({
+      data: {
+        loginId: data.login_id,
+        missionId: data.mission_id,
+        status: "ongoing",
+      },
+    });
 
+    return newOngoing.id;
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release(); 
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
 };
 
-
-export const getOngoing= async (insertId) => {
-  const conn = await pool.getConnection();
-
+export const getOngoing = async (ongoingId) => {
   try {
-    const [user] = await pool.query(`SELECT * FROM login_mission_status WHERE id = ?;`, insertId);
+    const ongoing = await prisma.loginMissionStatus.findUnique({
+      where: {
+        id: ongoingId,
+      },
+    });
 
-    console.log(user);
-
-    if (user.length == 0) {
+    if (!ongoing) {
       return null;
     }
 
-    return user;
+    return ongoing;
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release();
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
 };

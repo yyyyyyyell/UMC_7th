@@ -1,59 +1,60 @@
-import { pool } from "../db.config.js";
+import prisma from "../db.config.js";
 
-// 가게가 존재하는지 확인
+// 가게가 존재하는지 확인 후 리뷰 추가
 export const addReview = async (data) => {
-  const conn = await pool.getConnection();
-
   try {
-    const [confirm] = await pool.query(
-      `SELECT * FROM store WHERE id = ?;`, 
-      data.store_id
-    );
+    // 가게가 존재하는지 확인
+    const store = await prisma.store.findUnique({
+      where: {
+        id: data.store_id,
+      },
+    });
 
-    if (confirm.length == 0) {
+    if (!store) {
       return null;
     }
-    
-    //리뷰 추가
-    const [result] = await pool.query( 
-      `INSERT INTO review (score, content, login_id, store_id) VALUES (?, ?, ?, ?);`,
-      [
-        data.score,
-        data.content,
-        data.login_id,
-        data.store_id
-      ]
-    );
 
-    return result.insertId; 
+    // 리뷰 추가
+    const newReview = await prisma.review.create({
+      data: {
+        score: data.score,
+        content: data.content,
+        loginId: data.login_id,
+        storeId: data.store_id,
+      },
+    });
 
+    return newReview.id;
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release();
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
 };
 
-export const getReview = async (insertId) => {
-  const conn = await pool.getConnection();
-
+export const getReview = async (reviewId) => {
   try {
-    const [review] = await pool.query(`SELECT * FROM review WHERE id = ?;`, insertId);
+    const review = await prisma.review.findUnique({
+      where: {
+        id: reviewId,
+      },
+    });
 
-    console.log(review);
-
-    if (review.length == 0) {
+    if (!review) {
       return null;
     }
 
     return review;
   } catch (err) {
-    throw new Error(
-      `오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`
-    );
-  } finally {
-    conn.release();
+    throw new Error(`오류가 발생했어요. 요청 파라미터를 확인해주세요. (${err})`);
   }
+};
+
+export const getUserReviews = async (loginId) => {
+  
+  const reviews = await prisma.review.findMany({
+    where: { loginId },
+    orderBy: { id: "asc" },
+    take: 10,
+  });
+  
+  return reviews;
 };

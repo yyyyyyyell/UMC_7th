@@ -1,5 +1,5 @@
-import { responseFromMission } from "../dtos/mission.dto.js";
-import {addMission,getMission} from "../repositories/mission.repository.js";
+import { responseFromMission, responseFromMissions } from "../dtos/mission.dto.js";
+import {addMission,getMission,getStoreMissions, getUserOngoingMissions, completeMission   } from "../repositories/mission.repository.js";
 
 export const MissionAdd = async (data) => {
   const joinMissionId = await addMission({
@@ -16,5 +16,19 @@ export const MissionAdd = async (data) => {
   
   const mission = await getMission(joinMissionId);
   
-  return responseFromMission({ mission: mission[0] });
+  return responseFromMission(mission);
+};
+
+export const listStoreMissions = async (storeId, cursor) => {
+  const missions = await getStoreMissions(storeId, cursor);
+  return responseFromMissions(missions);
+};
+
+export const listUserOngoingMissions = async (userId, cursor) => {
+  const missions = await getUserOngoingMissions(userId, cursor);
+  return responseFromMissions(missions);
+};
+
+export const completeUserMission = async (userId, missionId) => {
+  await completeMission(userId, missionId);
 };
