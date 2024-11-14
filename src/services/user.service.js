@@ -18,7 +18,7 @@ export const userSignUp = async (data) => {
   });
 
   if (joinUserId === null) { //==(값만 비교)를 사용하면 undefined도 조건을 만족할 수 있기 때문에 === 사용(타입과 값이 모두 같은 경우)
-    throw new Error("이미 존재하는 이메일입니다.");
+    throw new DuplicateUserEmailError("이미 존재하는 이메일입니다.", data);
     //중복 이메일로 인해 새로운 사용자가 추가되지 않으면 addUser 함수가 null을 반환하도록 설계되어 있다
   }
   

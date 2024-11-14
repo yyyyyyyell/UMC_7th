@@ -8,7 +8,7 @@ export const Ongoing = async (data) => {
   });
 
   if (joinOngoingId === null) {
-    throw new Error("이미 진행중인 미션입니다.");
+    throw new DuplicateUserEmailError("이미 진행중인 미션입니다.", data);
   }
   
   const ongoing = await getOngoing(joinOngoingId);

@@ -8,7 +8,7 @@ export const handleStoreAdd = async (req, res, next) => {
 
   const store = await StoreAdd(bodyToStore(req.body));
   console.log("Final result sent to client:", store);
-  res.status(StatusCodes.OK).json({ result: store });
+  res.status(StatusCodes.OK).success(store);
 };
 
 export const handleListStoreReviews = async (req, res, next) => {

@@ -1,13 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import { bodyToMission, parseCursor } from "../dtos/mission.dto.js";
-import { MissionAdd, listStoreMissions, listUserOngoingMissions } from "../services/mission.service.js";
+import { MissionAdd, listStoreMissions, listUserOngoingMissions,completeUserMission  } from "../services/mission.service.js";
 
 export const handleMissionAdd = async (req, res, next) => {
   console.log("가게에 미션 추가를 요청했습니다!");
   console.log("body:", req.body);
 
   const mission = await MissionAdd(bodyToMission(req.body));
-  res.status(StatusCodes.OK).json({ result: mission });
+  res.status(StatusCodes.OK).success(mission);
 };
 
 export const handleListStoreMissions = async (req, res) => {
@@ -16,8 +16,7 @@ export const handleListStoreMissions = async (req, res) => {
   const storeId = parseInt(req.params.storeId, 10);
   const cursor = parseCursor(req.query.cursor);
   const missions = await listStoreMissions(storeId, cursor);
-
-  res.status(StatusCodes.OK).json({ result: missions });
+  res.status(StatusCodes.OK).success(missions);
 };
 
 export const handleListUserOngoingMissions = async (req, res) => {
@@ -26,8 +25,7 @@ export const handleListUserOngoingMissions = async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   const cursor = parseCursor(req.query.cursor);
   const missions = await listUserOngoingMissions(userId, cursor);
-
-  res.status(StatusCodes.OK).json({ result: missions });
+  res.status(StatusCodes.OK).success(missions);
 };
 
 export const handleCompleteUserMission = async (req, res) => {
@@ -36,6 +34,5 @@ export const handleCompleteUserMission = async (req, res) => {
   const userId = parseInt(req.params.userId, 10);
   const missionId = parseInt(req.params.missionId, 10);
   await completeUserMission(userId, missionId);
-
-  res.status(StatusCodes.OK).json({ message: "미션이 완료되었습니다." });
+  res.status(StatusCodes.OK).success({ message: "미션이 완료되었습니다." });
 };

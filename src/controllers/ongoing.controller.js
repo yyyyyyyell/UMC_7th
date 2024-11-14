@@ -7,5 +7,5 @@ export const handleOngoing = async (req, res, next) => {
   console.log("body:", req.body);
 
   const ongoing = await Ongoing(bodyToOngoing(req.body));
-  res.status(StatusCodes.OK).json({ result: ongoing });
+  res.status(StatusCodes.OK).success(ongoing);
 };

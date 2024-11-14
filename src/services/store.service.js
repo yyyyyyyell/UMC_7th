@@ -10,7 +10,7 @@ export const StoreAdd = async (data) => {
   });
 
   if (joinStoreId === null) {
-    throw new Error("이미 존재하는 가게입니다.");
+    throw new DuplicateUserEmailError("이미 존재하는 이메일입니다.", data);
   }
   
   const store = await getStore(joinStoreId);

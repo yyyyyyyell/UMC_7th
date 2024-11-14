@@ -11,7 +11,7 @@ export const MissionAdd = async (data) => {
   });
 
   if (joinMissionId === null) {
-    throw new Error("이미 존재하는 미션입니다.");
+    throw new DuplicateUserEmailError("이미 존재하는 미션입니다.", data);
   }
   
   const mission = await getMission(joinMissionId);

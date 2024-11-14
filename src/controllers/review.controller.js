@@ -7,7 +7,7 @@ export const handleReviewAdd = async (req, res, next) => {
   console.log("body:", req.body);
 
   const review = await ReviewAdd(bodyToReview(req.body));
-  res.status(StatusCodes.OK).json({ result: review });
+  res.status(StatusCodes.OK).success(review);
 };
 
 export const handleListUserReviews = async (req, res) => {
@@ -17,5 +17,5 @@ export const handleListUserReviews = async (req, res) => {
   const cursor = parseCursor(req.query.cursor); // parseCursor를 통해 cursor 변환
   const reviews = await listUserReviews(loginId, cursor);
 
-  res.status(StatusCodes.OK).json({ result: reviews });
+  res.status(StatusCodes.OK).success(reviews);
 };

@@ -10,7 +10,7 @@ export const ReviewAdd = async (data) => {
   });
 
   if (joinReviewId === null) {
-    throw new Error("가게가 존재하지 않습니다.");
+    throw new DuplicateUserEmailError("가게가 존재하지 않습니다.", data);
   }
   
   const review = await getReview(joinReviewId);
