@@ -3,15 +3,33 @@ import { pool } from "../db.config.js";
 
 import prisma from '../db.config.js';
 
-// User 데이터 삽입
-export const addUser = async (data) => {
-  const user = await prisma.user.findFirst({ where: { account: data.account } });
-  if (user) {
-    return null;
-  }
+// // User 데이터 삽입
+// export const addUser = async (data) => {
+//   const user = await prisma.user.findFirst({ where: { account: data.account } });
+//   if (user) {
+//     return null;
+//   }
 
-  const created = await prisma.user.create({ data: data });
-  return created.id;
+//   const created = await prisma.user.create({ data: data });
+//   return created.id;
+// };
+
+export const createUser = async (userData) => {
+  return await prisma.user.create({
+    data: {
+      account: userData.account,
+      password: userData.password,
+      name: userData.name,
+      gender: userData.gender,
+      birth: userData.birth
+    }
+  });
+};
+
+export const findUserByEmail = async (account) => {
+  return await prisma.user.findFirst({
+    where: { account }
+  });
 };
 
 // 사용자 정보 얻기
