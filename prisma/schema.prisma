@@ -136,3 +136,12 @@ model LoginMissionStatus {
   @@map("login_mission_status")
   @@unique([loginId, missionId], map: "unique_user_mission")
 }
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String   @db.text
+  expiresAt DateTime @map("expires_at")
+
+  @@map("session")
+}

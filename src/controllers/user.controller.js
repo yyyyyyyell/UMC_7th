@@ -22,14 +22,11 @@ export const handleUserSignUp = async (req, res, next) => {
           schema: {
             type: "object",
             properties: {
-              email: { type: "string" },
+              account: { type: "string" },
+              password: { type: "string" },
               name: { type: "string" },
               gender: { type: "string" },
-              birth: { type: "string", format: "date" },
-              address: { type: "string" },
-              detailAddress: { type: "string" },
-              phoneNumber: { type: "string" },
-              preferences: { type: "array", items: { type: "number" } }
+              birth: { type: "string", format: "date" }
             }
           }
         }
@@ -47,9 +44,8 @@ export const handleUserSignUp = async (req, res, next) => {
               success: {
                 type: "object",
                 properties: {
-                  email: { type: "string" },
-                  name: { type: "string" },
-                  preferCategory: { type: "array", items: { type: "string" } }
+                  account: { type: "string" },
+                  name: { type: "string" }
                 }
               }
             }
@@ -80,27 +76,37 @@ export const handleUserSignUp = async (req, res, next) => {
       }
     };
   */
-  res.success(user);
+
   console.log("회원가입 요청!");
 
   const { account, password, name, gender, birth } = req.body;
-  
+
   // 입력값 검증
   if (!account || !password || !name || !gender || !birth) {
     return res.status(StatusCodes.BAD_REQUEST).json({
       resultType: 'FAIL',
-      error: { errorCode: 'INVALID_INPUT', reason: '이메일과 비밀번호를 입력하세요.' }
+      error: { errorCode: 'INVALID_INPUT', reason: '모든 필드를 입력하세요.' }
     });
   }
 
   try {
     // DTO를 사용하여 요청 본문을 변환하고, Service 함수 호출
-    const newUser = await signUpUser(bodyToUser(req.body));
-    res.status(StatusCodes.CREATED).json({ resultType: 'SUCCESS', message: '회원가입 성공', userId: newUser.id });
+    const newUser = await signUpUser(bodyToUser(req.body)); // signUpUser 결과를 newUser에 할당
+
+    // 회원가입 성공 시, 사용자 정보 응답
+    res.status(StatusCodes.CREATED).json({
+      resultType: 'SUCCESS',
+      message: '회원가입 성공',
+      success: {
+        account: newUser.account,
+        name: newUser.name
+      }
+    });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       resultType: 'FAIL',
-      error: { errorCode: error.errorCode || 'UNKNOWN_ERROR', reason: error.message } });
+      error: { errorCode: error.errorCode || 'UNKNOWN_ERROR', reason: error.message }
+    });
   }
 };
 

@@ -18,7 +18,18 @@ import cookieParser from 'cookie-parser';
 import bcrypt from 'bcrypt'
 import session from 'express-session';
 // 설명을 위해 코드를 아키텍처에 알맞게 나누지 않았기 때문에 prisma를 index.js에 불러와주세요
+
+import { PrismaSessionStore } from "@quixo3/prisma-session-store";
+import passport from "passport";
+import { googleStrategy, naverStrategy } from "./auth.config.js";
+import { prisma } from "./db.config.js";
+
 dotenv.config();
+
+passport.use(googleStrategy);
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+passport.use(naverStrategy);
 
 const app = express();
 const port = process.env.PORT;
@@ -41,26 +52,49 @@ app.use((req, res, next) => {
 });
 
 
-// 미들웨어로 쿠키 파서 등록해주기
-app.use(cookieParser())
-app.use(session({
-  // 쿠키에 서명 추가하기  환경변수로 관리한다.
-  secret: process.env.SESSION_SECRET,
-  // 요청이 왔을 때 세션에 수정 사항이 없어도 다시 저장할지 설정하는 옵션
-  resave: false,
-  //  세션에 저장할 내용이 없어도 처음부터 세션을 설정할지 결정하는 옵션
-  saveUninitialized: true,
-  // 쿠키에 대한 설정을 하는 옵션
-  cookie: { secure: process.env.NODE_ENV === 'production',// 프로덕션 환경에서만 secure 설정
-          maxAge: 1000 * 60 * 60 * 24 // 쿠키 만료 시간 (예: 1일) 
-
-  }
-}));
+// // 미들웨어로 쿠키 파서 등록해주기
+// app.use(cookieParser())
+// app.use(session({
+//   // 쿠키에 서명 추가하기  환경변수로 관리한다.
+//   secret: process.env.SESSION_SECRET,
+//   // 요청이 왔을 때 세션에 수정 사항이 없어도 다시 저장할지 설정하는 옵션
+//   resave: false,
+//   //  세션에 저장할 내용이 없어도 처음부터 세션을 설정할지 결정하는 옵션
+//   saveUninitialized: flase,
+//   // 쿠키에 대한 설정을 하는 옵션
+//   cookie: { secure: process.env.NODE_ENV === 'production',// 프로덕션 환경에서만 secure 설정
+//           maxAge: 7 * 24 * 60 * 60 * 1000, // 쿠키 만료 시간 (예: 7일) 
+//   store: new PrismaSessionStore(prisma, {
+//     checkPeriod: 2 * 60 * 1000, // ms
+//     dbRecordIdIsSessionId: true,
+//     dbRecordIdFunction: undefined,
+//   }),
+//   }
+// }));
 
 app.use(cors());                            // cors 방식 허용
 app.use(express.static('public'));          // 정적 파일 접근
 app.use(express.json());                    // request의 본문을 json으로 해석할 수 있도록 함 (JSON 형태의 요청 body를 파싱하기 위함)
 app.use(express.urlencoded({ extended: false })); // 단순 객체 문자열 형태로 본문 데이터 해석
+
+app.use(
+  session({
+    cookie: {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+    },
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.EXPRESS_SESSION_SECRET,
+    store: new PrismaSessionStore(prisma, {
+      checkPeriod: 2 * 60 * 1000, // ms
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(
   "/docs",
@@ -70,6 +104,26 @@ app.use(
       url: "/openapi.json",
     },
   })
+);
+
+app.get("/oauth2/login/google", passport.authenticate("google"));
+app.get(
+  "/oauth2/callback/google",
+  passport.authenticate("google", {
+    failureRedirect: "/oauth2/login/google",
+    failureMessage: true,
+  }),
+  (req, res) => res.redirect("/")
+);
+
+app.get("/oauth2/login/naver", passport.authenticate("naver"));
+app.get(
+  "/oauth2/callback/naver",
+  passport.authenticate("naver", {
+    failureRedirect: "/oauth2/login/naver",
+    failureMessage: true,
+  }),
+  (req, res) => res.redirect("/")
 );
 
 app.get("/openapi.json", async (req, res, next) => {
@@ -95,6 +149,8 @@ app.get("/openapi.json", async (req, res, next) => {
 
 
 app.get("/", (req, res) => {
+  // #swagger.ignore = true
+  console.log(req.user);
   res.send("Hello World!");
 });
 
